@@ -35,7 +35,6 @@ pixel_t *pixels = NULL;
 
 typedef struct Snake Snake;
 typedef struct Square Square;
-typedef struct World World;
 
 struct Square
 {
