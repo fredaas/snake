@@ -55,14 +55,16 @@ enum { LEFT, RIGHT, UP, DOWN };
 int current_direction = RIGHT;
 int next_direction    = RIGHT;
 
+int apple_collision(void);
+int snake_collision(void);
 void draw_apple(void);
 void draw_background(pixel_t color);
 void draw_snake(void);
 void draw_square(int x, int y, int size, pixel_t color);
-void draw_square(int x, int y, int size, pixel_t color);
 void extend_snake(void);
 void init_snake(int x, int y, int length);
 void print_board_info(void);
+void reset_game(void);
 void seed_apple(void);
 void update_collisions(void);
 void update_direction(void);
@@ -209,7 +211,7 @@ int apple_collision(void)
     return (apple.x == snake.x[0]) && (apple.y == snake.y[0]);
 }
 
-void reset_game()
+void reset_game(void)
 {
     init_snake(WIDTH / 2, HEIGHT / 2, 3);
     seed_apple();
