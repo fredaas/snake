@@ -12,8 +12,9 @@ typedef uint32_t pixel_t;
 #define WIDTH 320
 #define HEIGHT 240
 
-#define COLOR_RED 0xff0000ff
-#define COLOR_WHITE 0xffffffff
+#define COLOR_BACKGROUND 0xffffffff
+#define COLOR_APPLE 0xff5459ff
+#define COLOR_SNAKE 0x404040ff
 
 #define SQUARE_SIZE (int)(10)
 #define N_SQUARES (int)(WIDTH * HEIGHT / (SQUARE_SIZE * SQUARE_SIZE))
@@ -139,7 +140,7 @@ void update_snake(void)
 
 void draw_apple(void)
 {
-    draw_square(apple.x, apple.y, SQUARE_SIZE, 0x00ffffff);
+    draw_square(apple.x, apple.y, SQUARE_SIZE, COLOR_APPLE);
 }
 
 void draw_background(pixel_t color)
@@ -150,7 +151,7 @@ void draw_background(pixel_t color)
 void draw_snake(void)
 {
     for (int i = 0; i < snake.length; i++)
-        draw_square(snake.x[i], snake.y[i], SQUARE_SIZE, COLOR_RED);
+        draw_square(snake.x[i], snake.y[i], SQUARE_SIZE, COLOR_SNAKE);
 }
 
 void draw_square(int x, int y, int size, pixel_t color)
@@ -252,7 +253,7 @@ int main(int argc, char **argv)
     }
 
     pixels = (pixel_t *)malloc(texture_w * texture_h * sizeof(pixel_t));
-    memset(pixels, COLOR_WHITE, texture_w * texture_h * sizeof(pixel_t));
+    memset(pixels, COLOR_BACKGROUND, texture_w * texture_h * sizeof(pixel_t));
 
     /* Configure window */
     SDL_SetWindowTitle(window, argv[1]);
@@ -286,7 +287,7 @@ int main(int argc, char **argv)
         update_collisions();
 
         /* Draw */
-        draw_background(COLOR_WHITE);
+        draw_background(COLOR_BACKGROUND);
         draw_snake();
         draw_apple();
 
