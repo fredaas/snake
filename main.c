@@ -27,9 +27,9 @@ int window_h = HEIGHT;
 int texture_w = WIDTH;
 int texture_h = HEIGHT;
 
-SDL_Window *window = NULL;
+SDL_Window *window     = NULL;
 SDL_Renderer *renderer = NULL;
-SDL_Texture *texture = NULL;
+SDL_Texture *texture   = NULL;
 
 pixel_t *pixels = NULL;
 
@@ -53,6 +53,7 @@ struct Snake
 enum { LEFT, RIGHT, UP, DOWN };
 
 int current_direction = RIGHT;
+int next_direction    = RIGHT;
 
 void draw_apple(void);
 void draw_background(pixel_t color);
@@ -64,7 +65,7 @@ void init_snake(int x, int y, int length);
 void print_board_info(void);
 void seed_apple(void);
 void update_collisions(void);
-void update_direction(int direction);
+void update_direction(void);
 void update_snake(void);
 
 
@@ -77,6 +78,9 @@ void update_snake(void);
 
 void init_snake(int x, int y, int length)
 {
+    current_direction = RIGHT;
+    next_direction    = RIGHT;
+
     for (int i = 0; i < length; i++)
     {
         snake.x[i] = x - i * SQUARE_SIZE;
@@ -93,6 +97,8 @@ void seed_apple(void)
 
 void update_snake(void)
 {
+    update_direction();
+
     int *x = snake.x;
     int *y = snake.y;
 
@@ -190,12 +196,35 @@ void print_board_info(void)
     printf("]\n");
 }
 
+int snake_collision(void)
+{
+    for (int i = 3; i < snake.length; i++)
+        if ((snake.x[0] == snake.x[i]) && (snake.y[0] == snake.y[i]))
+            return 1;
+    return 0;
+}
+
+int apple_collision(void)
+{
+    return (apple.x == snake.x[0]) && (apple.y == snake.y[0]);
+}
+
+void reset_game()
+{
+    init_snake(WIDTH / 2, HEIGHT / 2, 3);
+    seed_apple();
+}
+
 void update_collisions(void)
 {
-    if ((apple.x == snake.x[0]) && (apple.y == snake.y[0]))
+    if (apple_collision())
     {
         seed_apple();
         extend_snake();
+    }
+    else if (snake_collision())
+    {
+        reset_game();
     }
 }
 
@@ -207,10 +236,10 @@ void update_collisions(void)
  *----------------------------------------------------------------------------*/
 
 
-void update_direction(int direction)
+void update_direction(void)
 {
     /* NOP when direction is opposite to current direction */
-    switch (direction)
+    switch (next_direction)
     {
     case UP:
         if (current_direction == DOWN)
@@ -229,9 +258,8 @@ void update_direction(int direction)
             return;
         break;
     }
-    current_direction = direction;
+    current_direction = next_direction;
 }
-
 
 int main(int argc, char **argv)
 {
@@ -276,7 +304,7 @@ int main(int argc, char **argv)
     texture_rect.x = 0;
     texture_rect.y = 0;
 
-    init_snake(WIDTH / 2,  HEIGHT / 2, 3);
+    reset_game();
 
     SDL_bool done = SDL_FALSE;
     while (!done)
@@ -312,16 +340,16 @@ int main(int argc, char **argv)
                     done = SDL_TRUE;
                     break;
                 case SDLK_w:
-                    update_direction(UP);
+                    next_direction = UP;
                     break;
                 case SDLK_a:
-                    update_direction(LEFT);
+                    next_direction = LEFT;
                     break;
                 case SDLK_s:
-                    update_direction(DOWN);
+                    next_direction = DOWN;
                     break;
                 case SDLK_d:
-                    update_direction(RIGHT);
+                    next_direction = RIGHT;
                     break;
                 }
             }
