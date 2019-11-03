@@ -5,7 +5,7 @@
 
 typedef uint32_t pixel_t;
 
-#define FPS 10
+#define FPS 20
 #define SLEEPTIME 1000 / FPS
 
 /* Screen dimensions */
@@ -57,16 +57,10 @@ int next_direction    = RIGHT;
 
 int apple_collision(void);
 int snake_collision(void);
-void draw_apple(void);
-void draw_background(pixel_t color);
-void draw_snake(void);
 void draw_square(int x, int y, int size, pixel_t color);
-void extend_snake(void);
 void init_snake(int x, int y, int length);
 void print_board_info(void);
-void reset_game(void);
-void seed_apple(void);
-void update_collisions(void);
+void init_game(void);
 void update_direction(void);
 void update_snake(void);
 
@@ -91,12 +85,6 @@ void init_snake(int x, int y, int length)
     snake.length = length;
 }
 
-void seed_apple(void)
-{
-    apple.x = (rand() % N_SQUARES_X) * SQUARE_SIZE;
-    apple.y = (rand() % N_SQUARES_Y) * SQUARE_SIZE;
-}
-
 void update_snake(void)
 {
     update_direction();
@@ -110,7 +98,7 @@ void update_snake(void)
     memcpy(x_prev, x, snake.length * sizeof(int));
     memcpy(y_prev, y, snake.length * sizeof(int));
 
-    for (int i = 1; i <= snake.length; i++)
+    for (int i = 1; i < snake.length; i++)
     {
         x[i] = x_prev[i - 1];
         y[i] = y_prev[i - 1];
@@ -145,34 +133,11 @@ void update_snake(void)
     }
 }
 
-void draw_apple(void)
-{
-    draw_square(apple.x, apple.y, SQUARE_SIZE, COLOR_APPLE);
-}
-
-void draw_background(pixel_t color)
-{
-    memset(pixels, color, texture_w * texture_h * sizeof(pixel_t));
-}
-
-void draw_snake(void)
-{
-    for (int i = 0; i < snake.length; i++)
-        draw_square(snake.x[i], snake.y[i], SQUARE_SIZE, COLOR_SNAKE);
-}
-
 void draw_square(int x, int y, int size, pixel_t color)
 {
     for (int i = x; i < x + size; i++)
         for (int j = y; j < y + size; j++)
             pixels[texture_w * j + i] = color;
-}
-
-void extend_snake(void)
-{
-    snake.x[snake.length] = snake.x[snake.length - 1];
-    snake.y[snake.length] = snake.y[snake.length - 1];
-    snake.length++;
 }
 
 void print_board_info(void)
@@ -211,32 +176,18 @@ int apple_collision(void)
     return (apple.x == snake.x[0]) && (apple.y == snake.y[0]);
 }
 
-void reset_game(void)
+void init_game(void)
 {
     init_snake(WIDTH / 2, HEIGHT / 2, 3);
-    seed_apple();
+    for (int i = 0; i < snake.length; i++)
+        draw_square(snake.x[i], snake.y[i], SQUARE_SIZE, COLOR_SNAKE);
+
+    memset(pixels, COLOR_BACKGROUND, texture_w * texture_h * sizeof(pixel_t));
+
+    apple.x = (rand() % N_SQUARES_X) * SQUARE_SIZE;
+    apple.y = (rand() % N_SQUARES_Y) * SQUARE_SIZE;
+    draw_square(apple.x, apple.y, SQUARE_SIZE, COLOR_APPLE);
 }
-
-void update_collisions(void)
-{
-    if (apple_collision())
-    {
-        seed_apple();
-        extend_snake();
-    }
-    else if (snake_collision())
-    {
-        reset_game();
-    }
-}
-
-
-/*------------------------------------------------------------------------------
- *
- * I/O
- *
- *----------------------------------------------------------------------------*/
-
 
 void update_direction(void)
 {
@@ -287,8 +238,12 @@ int main(int argc, char **argv)
     /* Configure window */
     SDL_SetWindowTitle(window, argv[1]);
     SDL_SetWindowSize(window, window_w, window_h);
-    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED);
+    SDL_SetWindowPosition(
+        window,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED
+    );
+    SDL_SetWindowTitle(window, "Snake");
     SDL_ShowWindow(window);
 
     /* Configure texture */
@@ -306,19 +261,36 @@ int main(int argc, char **argv)
     texture_rect.x = 0;
     texture_rect.y = 0;
 
-    reset_game();
+    init_game();
 
     SDL_bool done = SDL_FALSE;
     while (!done)
     {
-        /* Update */
-        update_snake();
-        update_collisions();
+        /* Clear snake tail */
+        draw_square(snake.x[snake.length - 1], snake.y[snake.length - 1], SQUARE_SIZE,
+            COLOR_BACKGROUND);
 
-        /* Draw */
-        draw_background(COLOR_BACKGROUND);
-        draw_snake();
-        draw_apple();
+        /* Move snake */
+        update_snake();
+
+        /* Draw snake head */
+        draw_square(snake.x[0], snake.y[0], SQUARE_SIZE, COLOR_SNAKE);
+
+        if (apple_collision())
+        {
+            snake.x[snake.length] = snake.x[snake.length - 1];
+            snake.y[snake.length] = snake.y[snake.length - 1];
+            snake.length++;
+            apple.x = (rand() % N_SQUARES_X) * SQUARE_SIZE;
+            apple.y = (rand() % N_SQUARES_Y) * SQUARE_SIZE;
+        }
+        else if (snake_collision())
+        {
+            init_game();
+        }
+
+        /* Draw Apple */
+        draw_square(apple.x, apple.y, SQUARE_SIZE, COLOR_APPLE);
 
         /* Render */
         SDL_UpdateTexture(texture, NULL, pixels, texture_w * sizeof(pixel_t));
