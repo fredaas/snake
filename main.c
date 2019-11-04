@@ -9,14 +9,15 @@ typedef uint32_t pixel_t;
 #define SLEEPTIME 1000 / FPS
 
 /* Screen dimensions */
-#define WIDTH 320
-#define HEIGHT 240
+#define WIDTH 512
+#define HEIGHT 512
+
+#define SQUARE_SIZE 16
 
 #define COLOR_BACKGROUND 0xffffffff
 #define COLOR_APPLE 0xff5459ff
 #define COLOR_SNAKE 0x404040ff
 
-#define SQUARE_SIZE (int)(10)
 #define N_SQUARES (int)(WIDTH * HEIGHT / (SQUARE_SIZE * SQUARE_SIZE))
 #define N_SQUARES_X (int)(WIDTH / SQUARE_SIZE)
 #define N_SQUARES_Y (int)(HEIGHT / SQUARE_SIZE)
