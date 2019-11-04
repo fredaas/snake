@@ -5,12 +5,15 @@
 
 typedef uint32_t pixel_t;
 
-#define FPS 20
+#define FPS 10
 #define SLEEPTIME 1000 / FPS
 
 /* Screen dimensions */
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH (int)512
+#define HEIGHT (int)512
+
+#define T_WIDTH (int)(WIDTH / 2)
+#define T_HEIGHT (int)(HEIGHT / 2)
 
 #define SQUARE_SIZE 16
 
@@ -18,15 +21,9 @@ typedef uint32_t pixel_t;
 #define COLOR_APPLE 0xff5459ff
 #define COLOR_SNAKE 0x404040ff
 
-#define N_SQUARES (int)(WIDTH * HEIGHT / (SQUARE_SIZE * SQUARE_SIZE))
-#define N_SQUARES_X (int)(WIDTH / SQUARE_SIZE)
-#define N_SQUARES_Y (int)(HEIGHT / SQUARE_SIZE)
-
-int window_w = WIDTH;
-int window_h = HEIGHT;
-
-int texture_w = WIDTH;
-int texture_h = HEIGHT;
+#define N_SQUARES (int)(T_WIDTH * T_HEIGHT / (SQUARE_SIZE * SQUARE_SIZE))
+#define N_SQUARES_X (int)(T_WIDTH / SQUARE_SIZE)
+#define N_SQUARES_Y (int)(T_HEIGHT / SQUARE_SIZE)
 
 SDL_Window *window     = NULL;
 SDL_Renderer *renderer = NULL;
@@ -124,12 +121,12 @@ void update_snake(void)
     for (int i = 0; i < snake.length; i++)
     {
         if (x[i] < 0)
-            x[i] = WIDTH - SQUARE_SIZE;
-        else if (x[i] >= WIDTH)
+            x[i] = T_WIDTH - SQUARE_SIZE;
+        else if (x[i] >= T_WIDTH)
             x[i] = 0;
         else if (y[i] < 0)
-            y[i] = HEIGHT - SQUARE_SIZE;
-        else if (y[i] >= HEIGHT)
+            y[i] = T_HEIGHT - SQUARE_SIZE;
+        else if (y[i] >= T_HEIGHT)
             y[i] = 0;
     }
 }
@@ -138,7 +135,7 @@ void draw_square(int x, int y, int size, pixel_t color)
 {
     for (int i = x; i < x + size; i++)
         for (int j = y; j < y + size; j++)
-            pixels[texture_w * j + i] = color;
+            pixels[T_WIDTH * j + i] = color;
 }
 
 void print_board_info(void)
@@ -179,11 +176,11 @@ int apple_collision(void)
 
 void init_game(void)
 {
-    init_snake(WIDTH / 2, HEIGHT / 2, 3);
+    init_snake(T_WIDTH / 2, T_HEIGHT / 2, 3);
     for (int i = 0; i < snake.length; i++)
         draw_square(snake.x[i], snake.y[i], SQUARE_SIZE, COLOR_SNAKE);
 
-    memset(pixels, COLOR_BACKGROUND, texture_w * texture_h * sizeof(pixel_t));
+    memset(pixels, COLOR_BACKGROUND, T_WIDTH * T_HEIGHT * sizeof(pixel_t));
 
     apple.x = (rand() % N_SQUARES_X) * SQUARE_SIZE;
     apple.y = (rand() % N_SQUARES_Y) * SQUARE_SIZE;
@@ -233,12 +230,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    pixels = (pixel_t *)malloc(texture_w * texture_h * sizeof(pixel_t));
-    memset(pixels, COLOR_BACKGROUND, texture_w * texture_h * sizeof(pixel_t));
+    pixels = (pixel_t *)malloc(T_WIDTH * T_HEIGHT * sizeof(pixel_t));
+    memset(pixels, COLOR_BACKGROUND, T_WIDTH * T_HEIGHT * sizeof(pixel_t));
 
     /* Configure window */
     SDL_SetWindowTitle(window, argv[1]);
-    SDL_SetWindowSize(window, window_w, window_h);
+    SDL_SetWindowSize(window, WIDTH, HEIGHT);
     SDL_SetWindowPosition(
         window,
         SDL_WINDOWPOS_CENTERED,
@@ -249,7 +246,7 @@ int main(int argc, char **argv)
 
     /* Configure texture */
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
-        SDL_TEXTUREACCESS_STREAMING, texture_w, texture_h);
+        SDL_TEXTUREACCESS_STREAMING, T_WIDTH, T_HEIGHT);
     SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
 
     /* Configure renderer */
@@ -257,8 +254,8 @@ int main(int argc, char **argv)
 
     /* Configure rect */
     SDL_Rect texture_rect;
-    texture_rect.w = window_w;
-    texture_rect.h = window_h;
+    texture_rect.w = WIDTH;
+    texture_rect.h = HEIGHT;
     texture_rect.x = 0;
     texture_rect.y = 0;
 
@@ -294,7 +291,7 @@ int main(int argc, char **argv)
         draw_square(apple.x, apple.y, SQUARE_SIZE, COLOR_APPLE);
 
         /* Render */
-        SDL_UpdateTexture(texture, NULL, pixels, texture_w * sizeof(pixel_t));
+        SDL_UpdateTexture(texture, NULL, pixels, T_WIDTH * sizeof(pixel_t));
         SDL_RenderCopy(renderer, texture, NULL, &texture_rect);
         SDL_RenderPresent(renderer);
         SDL_Delay(SLEEPTIME);
